@@ -1,4 +1,5 @@
 
+ 
  <?php 
 function add_script_style() {
     wp_register_style( 'fonts', 'https://fonts.googleapis.com/css?family=Poppins:400,700|Raleway:400,700&display=swap' );
@@ -35,9 +36,7 @@ function wpb_custom_new_menu() {
     );
   }
   add_action( 'init', 'wpb_custom_new_menu' );
-  add_theme_support( 'post-thumbnails' );
-  
-  
+
 function houseCustomPostType() {
   // set up product labels
   $labels = array(
@@ -80,16 +79,6 @@ function houseCustomPostType() {
       )
   );
   register_post_type( 'house', $args );
-  // register taxonomy
-
-  // register_taxonomy('custom_house', 'house', [
-  //   'hierarchical' => true,
-  //   'label' => 'Category',
-  //   'query_var' => true,
-  //   'rewrite' => [
-  //     'slug' => 'house-category'
-  //   ]
-  // ]);
 }
 add_action( 'init', 'houseCustomPostType' );
 
@@ -171,7 +160,101 @@ function sennza_register_cpt_testimonial() {
         ) );
     }
         add_action( 'widgets_init', 'strappress_widgets_init' );    
-?>
+
+
+        function jsonCustomPostType() {
+            // set up product labels
+            $labell = array(
+                'name' => 'json post',
+                'label'        => 'jsonpost',
+                'singular_name' => 'json post',
+                'add_new' => 'Add json post',
+                'add_new_item' => 'Add json post',
+                'edit_item' => 'Edit json post',
+                'new_item' => 'json post',
+                'all_items' => 'json post',
+                'view_item' => 'View json post',
+                'search_items' => 'Search json post',
+                'not_found' =>  'No json post Found',
+                'not_found_in_trash' => 'No json post found in Trash', 
+                'parent_item_colon' => '',
+                'menu_name' => 'Json post',
+            );
+            // register post type
+            $argg = array(
+                'labels' => $labell,
+                'public' => true,
+                'show_in_rest' => true,
+                'has_archive' => true,
+                'show_ui' => true,
+                'capability_type' => 'post',
+                'hierarchical' => false,
+                'rewrite' => array('slug' => 'jsonpost','thumbnail'),
+                'query_var' => true,
+                'menu_icon' => 'dashicons-post-status',
+                'supports' => array(
+                    'title',
+                    'editor',
+                    'excerpt',
+                    'trackbacks',
+                    'custom-fields',
+                    'comments',
+                    'revisions',
+                    'thumbnail',
+                    'author',
+                    'page-attributes'
+                )
+            );
+            register_post_type( 'json post', $argg );
+          }
+          register_taxonomy('jsonpost_category', 'jsonpost', array('hierarchical' => true, 'label' => 'Category', 'query_var' => true, 'rewrite' => array( 'slug' => 'jsonpost-category' )));
+
+          add_action( 'init', 'jsonCustomPostType' );
+
+          
+
+add_action( 'rest_api_init', 'jsonrestapi'); 
+function jsonrestapi(){
+    register_rest_route( 'wp', '/v2/demo-api', array(
+        'methods' => WP_REST_SERVER::READABLE,
+        'callback' => 'jsonapi',
+    ));
+}
+function jsonapi() {
+    $allPosts = [];
+    $allPosts['jsonpost'] = getPostsBy('jsonpost',5);
+    $allPosts['posts'] = getPostsBy('post',5);
+    $allPosts['testimonial'] = getPostsBy('testimonial',5);
+    return $allPosts;
+}
+
+function getPostsBy($postType,$limit)
+{
+    $allposts=[];
+    $json = new WP_QUERY (array(
+        'post_type'=>$postType,
+        'posts_per_page' => $limit,
+    ));
+    if(count($json->posts)){
+        foreach($json->posts as $post){
+            $allposts[]=array(
+                'id' => $post->ID,
+                'title' => $post->post_title,
+                'excerpt'=>$post->post_excerpt,
+                'content'=>$post->post_content,
+                'post_type'=>$post->post_type,
+                'slug'=>$post->post_name,
+                'date'=>$post->post_date,
+                'author'=>get_the_author_meta('display_name', $post->post_author),
+                'author_image'=> get_avatar_url( $post->author ),
+            );
+        }
+    }
+    return $allposts;
+}
+
+
+
 
 
 
